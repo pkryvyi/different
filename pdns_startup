@@ -1,0 +1,77 @@
+#!/bin/bash
+
+# Retrive configuration from instance metadata
+DB_CONNECTION=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/db_connection -H "Metadata-Flavor: Google")
+DB_SCHEMA=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/db_schema -H "Metadata-Flavor: Google")
+DB_USERNAME=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/db_username -H "Metadata-Flavor: Google")
+DB_PASSWORD=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/db_password -H "Metadata-Flavor: Google")
+INSTANCE_IP=$(curl http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/ip -H "Metadata-Flavor: Google")
+DNS_ROLE=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/dns_role -H "Metadata-Flavor: Google")
+AXFR_SUBNET=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/axfr_subnet -H "Metadata-Flavor: Google")
+
+
+#Update system software, install mysql and PowerDns
+# yum -y update
+yum install -y mysql bind-utils pdns-server pdns-backend-mysql
+
+#Connection to CloudSql via cloud_sql_proxy
+curl https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 --output /usr/local/bin/cloud_sql_proxy
+chmod +x /usr/local/bin/cloud_sql_proxy
+./usr/local/bin/cloud_sql_proxy -instances=${DB_CONNECTION}=tcp:3306 &
+
+#Backup Powerdns config
+mv /etc/pdns/pdns.conf /etc/pdns/pdns.conf.orig
+touch /etc/pdns/pdns.conf
+
+
+if [ "${DNS_ROLE}" = "master" ]; then
+    MASTER_ENABLED="yes"
+    SLAVE_ENABLED="no"
+else
+    MASTER_ENABLED="no"
+    SLAVE_ENABLED="yes"
+fi
+
+#Powerdns config
+echo "# allow-axfr-ips        Allow zonetransfers only to these subnets
+allow-axfr-ips=${AXFR_SUBNET}
+# config-dir    Location of configuration directory (pdns.conf)
+config-dir=/etc/pdns
+# daemon        Operate as a daemon
+daemon=yes
+# disable-axfr  Disable zonetransfers but do allow TCP queries
+disable-axfr=no
+# disable-tcp   Do not listen to TCP queries
+disable-tcp=no
+# guardian      Run within a guardian process
+guardian=yes
+# launch        Which backends to launch and order to query them in
+launch=gmysql
+gmysql-host=127.0.0.1
+# Change database name
+gmysql-dbname=${DB_SCHEMA}
+# Change your database user
+gmysql-user=${DB_USERNAME}
+# Change your database password
+gmysql-password=${DB_PASSWORD}
+# local-address Local IP addresses to which we bind
+local-address=${INSTANCE_IP}
+# local-port    The port on which we listen
+local-port=53
+# log-dns-details       If PDNS should log DNS non-erroneous details
+log-dns-details=on
+# loglevel      Amount of logging. Higher is more.
+loglevel=4
+# master        Act as a master
+master=${MASTER_ENABLED}
+# slave Act as a slave
+slave=${SLAVE_ENABLED}
+# setgid        If set, change group id to this gid for more security
+setgid=pdns
+# setuid        If set, change user id to this uid for more security
+setuid=pdns" > /etc/pdns/pdns.conf
+
+# Enable and start PowerDNS service
+systemctl enable pdns
+systemctl daemon-reload
+systemctl start pdns
