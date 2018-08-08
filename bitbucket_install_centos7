@@ -1,34 +1,47 @@
 #!/bin/bash
 #sudo yum update -y
-BUCKET_NAME=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/bucket_name -H "Metadata-Flavor: Google")
+#BUCKET_NAME=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/bucket_name -H "Metadata-Flavor: Google")
 DB_CONNECTION=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/db_connection -H "Metadata-Flavor: Google")
 
-yum install -y wget java-1.8.0-openjdk git2u postgresql
+BITBUCKET_HOME=/var/atlassian/bitbucket
+BITBUCKET_INSTALL=/opt/atlassian/bitbucket
+JRE_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.181-3.b13.el7_5.x86_64/jre/
+#JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.181-3.b13.el7_5.x86_64/
+
 wget https://centos7.iuscommunity.org/ius-release.rpm
 rpm -Uvh ius-release.rpm
+yum install -y wget java-1.8.0-openjdk git2u postgresql gzip
 
-cd /opt/
-mkdir Atlassian && cd Atlassian
-wget https://www.atlassian.com/software/stash/downloads/binary/atlassian-bitbucket-5.12.0.tar.gz
-tar -xvzf atlassian-bitbucket-*.tar.gz
-rm atlassian-bitbucket-*.tar.gz
-ln -s atlassian-bitbucket-* atlassian-bitbucket
+#Create directoris BITBUCKET_HOME and BITBUCKET_INSTALL
 
-mkdir /opt/Bitbucket && cd /opt/Atlassian/atlassian-bitbucket/bin/
+mkdir -p "${BITBUCKET_HOME}"
+mkdir -p "${BITBUCKET_INSTALL}"
 
-export BITBUCKET_HOME=/opt/Bitbucket
+wget https://www.atlassian.com/software/stash/downloads/binary/atlassian-bitbucket-5.12.0.tar.gz -O atlassian-bitbucket.tar.gz
+tar -xvzf atlassian-bitbucket.tar.gz -C "${BITBUCKET_INSTALL}" --strip-components=1
+rm atlassian-bitbucket.tar.gz
+sed -i "s~BITBUCKET_HOME=~BITBUCKET_HOME=${BITBUCKET_HOME}~g" "${BITBUCKET_INSTALL}/bin/set-bitbucket-home.sh"
+sed -i "s~JRE_HOME=~JRE_HOME=${JRE_HOME}~g" "${BITBUCKET_INSTALL}/bin/set-jre-home.sh"
 
-gsutil cp gs://$BUCKET_NAME/bitbucket.service /etc/systemd/system/bitbucket.service
+chmod -R 700 "${BITBUCKET_HOME}"
+chmod -R 700 "${BITBUCKET_INSTALL}"
 
-sudo sed -i '0,/BITBUCKET_HOME=/s//BITBUCKET_HOME=\/opt\/Bitbucket\//g' set-bitbucket-home.sh
+echo "
+[Unit]
+Description=Atlassian Bitbucket Server Service
+After=syslog.target network.target
 
-export JRE_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.181-3.b13.el7_5.x86_64/jre/
-export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.181-3.b13.el7_5.x86_64/
-sudo sed -i '0,/JRE_HOME=/s//JRE_HOME=\/usr\/lib\/jvm\/java-1.8.0-openjdk-1.8.0.181-3.b13.el7_5.x86_64\/jre\//g' set-jre-home.sh 
-sudo chmod 750 /opt/Bitbucket/
-sudo ./start-bitbucket.sh 
-# Start Bitbucket
-systemctl start bitbucket
+[Service]
+Type=forking
+User=root
+ExecStart=/opt/atlassian/bitbucket/bin/start-bitbucket.sh
+ExecStop=/opt/atlassian/bitbucket/bin/stop-bitbucket.sh
+
+[Install]
+WantedBy=multi-user.target" > /etc/systemd/system/bitbucket.service
+
+systemctl daemon-reload
+sudo systemctl restart bitbucket
 
 curl https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 --output /usr/local/bin/cloud_sql_proxy
 chmod +x /usr/local/bin/cloud_sql_proxy
