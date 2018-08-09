@@ -1,0 +1,42 @@
+#Server
+yum install nfs-utils
+  139  mkdir /var/nfsshare
+  140  chmod -R 755 /var/nfsshare
+  141  chown nfsnobody:nfsnobody /var/nfsshare
+  142  cat /etc/passwd
+  143  systemctl enable rpcbind
+  144  systemctl enable nfs-server
+  145  systemctl enable nfs-lock
+  146  systemctl enable nfs-idmap
+  147  systemctl start rpcbind
+  148  systemctl start nfs-server
+  149  systemctl start nfs-lock
+  150  systemctl start nfs-idmap
+  151  nano /etc/exports
+  152  nfs --version
+  153  nfs-utils --version
+  154  mount -v | grep /home/patronreg/
+  155  mount -v | grep /home/зл
+  156  mount -v | grep /home/pk
+  157  nfsstat
+  158  systemctl restart nfs-server
+  159  systemctl restart nfs-server
+  160  firewall-cmd --permanent --zone=public --add-service=nfs
+  161  firewall-cmd --permanent --zone=public --add-service=mountd
+  162  firewall-cmd --permanent --zone=public --add-service=rpc-bind
+  163  firewall-cmd --reload
+  164  cd /var/nfsshare/
+  165  ls
+  166  touch 1.sh
+  167  df -kh
+  
+  #client
+    yum install nfs-utils
+   14  mkdir -p /mnt/nfs/home
+   15  mkdir -p /mnt/nfs/var/nfsshare
+   16  mount -t nfs 10.142.0.4:/home /mnt/nfs/home/
+   17   mount -t nfs 192.168.0.100:/var/nfsshare /mnt/nfs/var/nfsshare/
+   18   mount -t nfs 10.142.0.4:/var/nfsshare /mnt/nfs/var/nfsshare/
+   19  cd /mnt/nfs/var/nfsshare/
+   20  ls
+   21  df -kh
