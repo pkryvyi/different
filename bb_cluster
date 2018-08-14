@@ -1,0 +1,75 @@
+ yum update -y
+ yum install nano
+ nano sudo nano /etc/hosts
+ nano /etc/hosts
+ yum install httpd
+  nano /etc/httpd/conf.d/status.conf
+  nan /etc/httpd/conf.d/status.conf
+ cat /etc/httpd/conf.d/status.conf
+  nano /etc/httpd/conf.d/status.conf
+  yum install pacemaker pcs -y
+ systemctl start pcsd.service
+ systemctl enable pcsd.service
+passwd hacluster
+   14  firewall-cmd --state
+   15  firewall-cmd --permanent --add-service=high-availability
+   16  firewall-cmd --reload
+   17  pcs cluster auth host1 host2
+   18  pcs cluster setup --name bb_cluster host1 host2
+   19  pcs cluster start --all
+   20  systemctl enable corosync.service
+   21  systemctl enable pacemaker.service
+   22  pcs status
+   23  pcs cluster auth host1 host2
+   24  pcs status
+   25  pcs cluster standby host1
+   26  pcs status
+   27  pcs cluster unstandby host1
+   28  pcs status
+   29  pcs cluster start --all
+   30  pcs status
+   31  cat /etc/cluster/cluster.conf
+   32  systemctl restart pacemaker.service
+   33  cat /etc/cluster/cluster.conf
+   34  pcs status
+   35  pcs status
+   36  pcs status corosync
+   37  cat /etc/hosts
+   38  pcs cluster auth host1 host2 -u hacluster -p passwd --debug
+   39  pcs cluster auth host1 host2 -u hacluster -p 1 --debug
+   40  pcs status corosync
+   41  pcs status
+   42  systemctl stop freeswitch
+   43  pcs status
+   44  yum install pcs pacemaker fence-agents-all
+   45  firewall-cmd --permanent --add-service=high-availability
+   46  firewall-cmd --add-service=high-availability
+   47  systemctl restart pcsd.service
+   48  systemctl enable pcsd.service
+   49  pcs cluster auth
+   50  pcs cluster auth host1 host2
+   51  pcs cluster status
+   52  pcs cluster setup --start --name bb_cluster
+   53  pcs cluster setup --start --name bb_cluster host1 host2
+   54  pcs cluster enable --all
+   55  pcs cluster status
+   56  pcs status
+   57  pcs status
+   58  pcs cluster status
+   59  pcs stonith show myapc
+   60  pcs cluster status
+   61  pcs status
+   62  pcs cluster auth host1.example.com host2.example.com
+   63  pcs status
+   64  pcs cluster status
+   65  systemctl restart pcsd.service
+   66  pcs cluster status
+   67  pcs cluster setup --start --name my_cluster host1.example.com host2.example.com
+   68  pcs status
+   69  pcs config
+   70  pcs status
+   71  pcs cluster status
+   72  pcs property set stonith-enabled=false
+   73  pcs property set no-quorum-policy=ignore
+   74  pcs cluster enable --all
+   75  pcs cluster st
