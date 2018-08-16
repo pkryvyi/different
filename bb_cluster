@@ -26,6 +26,34 @@ systemctl enable drbd
 drbdadm primary r0  /// drbdadm secondary r0
 drbdadm role r0
 drbdadm up r0
+/////r0.res
+resource r0 {
+        disk /dev/sdb;
+        device /dev/drbd0;
+        meta-disk internal;
+        on h1 {
+                address 10.132.0.2:7789;
+        }
+        on h2 {
+                address 10.132.0.3:7789;
+        }
+}
+
+////global_common.conf  
+global {
+ usage-count no;
+}
+common {
+ net {
+  protocol C;
+  allow-two-primaries yes;
+}
+}
+
+drbdadm adjust r0
+drbdadm primary r0
+
+
 
 
   14  firewall-cmd --state
