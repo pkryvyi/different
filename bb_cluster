@@ -1,5 +1,5 @@
  yum update -y
- yum install nano
+ yum install nano -н
  nano sudo nano /etc/hosts
  nano /etc/hosts
  yum install httpd -y
@@ -19,6 +19,9 @@ rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm
 yum install drbd90-utils kmod-drbd90 -y
 lsmod | grep -i drbd
 modprobe drbd
+echo drbd > /etc/modules-load.d/drbd.conf
+mv /etc/drbd.d/global_common.conf /etc/drbd.d/global_common.conf.orig
+
 nano r0.res                  r0 - file name of our resource
 drbdadm create-md r0
 systemctl start drbd
@@ -53,6 +56,23 @@ common {
 drbdadm adjust r0
 drbdadm primary r0
 
+На сервере 1 переводим r0 в состояние secondary
+
+[root@srv1 ~]# drbdadm secondary r0
+Запускаем подключение к r0 с параметром –discard-my-data,
+
+[root@srv1 ~]# drbdadm -- --discard-my-data connect r0
+Если выходит следующее сообщение
+
+0: Failure: (125) Device has a net-config (use disconnect first)
+Command 'drbdsetup 0 net 192.168.1.117:7789 192.168.1.195:7789 C --set-defaults --create-device --allow-two-primaries --discard-my-data' terminated with exit code 10
+Отключаем r0 и повторяем операцию.
+
+[root@srv1 ~]# drbdadm disconnect r0
+[root@srv1 ~]# drbdadm -- --discard-my-data connect r0
+На втором сервере запускаем
+
+[root@srv2 ~]# drbdadm connect r0
 
 
 
