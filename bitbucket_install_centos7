@@ -60,3 +60,17 @@ sha1sum elasticsearch-5.5.3.rpm
 sudo rpm --install elasticsearch-5.5.3.rpm
 sudo systemctl status elasticsearch.service
 /usr/share/elasticsearch/bin/elasticsearch-plugin install -b https://packages.atlassian.com/maven/com/atlassian/elasticsearch/buckler-plugin/1.0.4/buckler-plugin-1.0.4-5.5.3.zip
+###install nfs
+#server
+yum -y install nfs-utils
+systemctl enable nfs-server.service
+systemctl start nfs-server.service
+mkdir /var/nfs
+chown nfsnobody:nfsnobody /var/nfs-sahred
+chmod 755 /var/nfs-shared
+nano /etc/exports >> /var/nfs-shared    10.132.0.0/24(rw,sync,no_root_squash,no_all_squash)
+exportfs -a
+
+#client
+yum install -y nfs-utils
+
