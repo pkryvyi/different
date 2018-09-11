@@ -1,0 +1,18 @@
+yum install -y java-1.8.0-openjdk-devel
+java -version
+cd /usr/local/src
+wget http://apache.volia.net/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz 
+tar -xf apache-maven-3.5.4-bin.tar.gz 
+rm -f apache-maven-3.5.4-bin.tar.gz 
+mv apache-maven-3.5.4/ /opt/maven/
+M2_HOME=/opt/maven
+cd /etc/profile.d/
+ls
+nano maven.sh
+> ># Apache Maven Environment Variables
+# MAVEN_HOME for Maven 1 - M2_HOME for Maven 2
+export M2_HOME=/opt/maven
+export PATH=${M2_HOME}/bin:${PATH}
+chmod +x maven.sh
+source /etc/profile.d/maven.sh 
+mvn --version
